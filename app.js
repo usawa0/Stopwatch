@@ -3,41 +3,54 @@ const startBtn = document.getElementById('start');
 const pauseBtn = document.getElementById('pause');
 const resetBtn = document.getElementById('reset');
 
-const start = 1698872400000
-let counter = start;
-let mode = 'pause';
+let tick = 0;
+let timeout = 10;
+let mode = 'start';
 
-startBtn.onclick = () => mode = 'start';
-pauseBtn.onclick = () => mode = 'pause';
-resetBtn.onclick = () => mode = 'reset';
+startBtn.onclick = bindMode('start');
+pauseBtn.onclick = bindMode('pause');
+resetBtn.onclick = bindMode('reset');
 
-update();
-
-setInterval(update, 10);
-
-function update() {
-	output.textContent = format();
+function bindMode(command) {
+	return () => mode = command;
 }
 
-function chronometer() {
-	if (mode === 'start') counter += 10;
-	if (mode === 'pause') counter;
-	if (mode === 'reset') counter = start;
-	
-	return counter;
+let timerId = setTimeout(function update() {
+	output.textContent = format();
+	checkMode();
+	timerId = setTimeout(update, timeout);
+}, timeout);
+
+function checkMode() {
+	if (mode === 'start') {
+		tick += timeout;
+		return;
+	}
+	if (mode === 'pause') {
+		clearTimeout(timerId);
+		return;
+	}
+	if (mode === 'reset') {
+		tick = 0;
+		return;
+	}
 }
 
 function format() {
-	const date = new Date(chronometer())
-	const hrs = addLeadZero(date.getHours());
-	const min = addLeadZero(date.getMinutes());
-	const sec = addLeadZero(date.getSeconds());
-	const msec = addLeadZero(parseInt(date.getMilliseconds() / 10));
+	const ms = parseInt(tick / 10);
+	const sec = parseInt(ms / 100);
+	const min = parseInt(sec / 60);
+	const hrs = parseInt(min / 60);
 
-	console.log(`${hrs}:${min}:${sec}.${msec}`);
-	return `${hrs}:${min}:${sec}.${msec}`;
+	const H = addLeadZero(hrs % 24);
+	const M = addLeadZero(min % 60);
+	const S = addLeadZero(sec % 60);
+	const Ms = addLeadZero(ms % 60);
+
+	console.log(`hrs: ${H}\n min: ${M}\n sec: ${S}\nms: ${Ms}`);
+	return `${H}:${M}:${S}.${Ms}`;
 }
 
-function addLeadZero(val) {
-	return val < 10 ? '0' + val : val;
+function addLeadZero(num) {
+	return (num < 10) ? '0' + num : num;
 }
